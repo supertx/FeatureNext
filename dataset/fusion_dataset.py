@@ -5,7 +5,8 @@ import numpy as np
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-anno_file = "/home/amax/tx/FeatureNext-master/data_process/result/pro_{}_train.txt"
+train_anno_file = "/home/jiangda/tx/FeatureNext/data_process/result/pro_{}_train.txt"
+test_anno_file = "/home/jiangda/tx/FeatureNext/data_process/result/pro_{}_test.txt"
 palm_datasets = ["IITD", "MPD", "NTU-CP", "SMPD"]
 
 class FusionDataset(Dataset):
@@ -25,15 +26,16 @@ class FusionDataset(Dataset):
         |   |-- loose_crop
         |   |   |-- xxx.jpg
         """
-    def __init__(self, palm_data_dir, face_data_dir, transform=None):
-        self.anno_files = [anno_file.format(dataset) for dataset in palm_datasets]
+    def __init__(self, palm_data_dir, face_data_dir, transform=None, train=True):
+        self.anno_files = [train_anno_file.format(dataset) if train else test_anno_file.format(dataset) for dataset in palm_datasets]
         self.palm_data_dir = palm_data_dir
         self.face_data_dir = face_data_dir
         self.palm_pth = []
         self.face_pth = []
         self.labels = []
+        self.train = train
         self.process_anno()
-        self.transform = transform if transform else transforms.ToTensor()
+        self.transform = get_default_transfrom(train=train) if transform is None else transform
     
     def __getitem__(self, index):
         face_img = Image.open(self.face_pth[index]).convert("RGB")
@@ -82,7 +84,7 @@ if __name__ == "__main__":
     dataset = FusionDataset(
         palm_data_dir="/data/tx/palm_data",
         face_data_dir="/data/tx/IJB",
-        transform=get_default_transfrom()
+        transform=get_default_transfrom(train=True)
     )
     print(len(dataset))
     print(dataset[0][0].size())
